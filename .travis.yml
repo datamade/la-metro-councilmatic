@@ -34,5 +34,5 @@ deploy:
     deployment_group: staging
     on:
       branch:
-         - master
-	 - troubleshoot
+        - master
+	- troubleshoot
