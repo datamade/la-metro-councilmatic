@@ -1,5 +1,5 @@
 psycopg2==2.6.2
-https://github.com/datamade/django-councilmatic/zipball/transactions
+https://github.com/datamade/django-councilmatic/zipball/transaction
 raven==5.30.0
 gunicorn==19.6.0
 PyPDF2==1.26.0
