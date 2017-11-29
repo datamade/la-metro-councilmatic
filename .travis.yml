@@ -2,6 +2,7 @@ branches:
   only:
   - "/^v0.*$/"
   - master
+  - troubleshoot
 language: python
 python:
 - '3.5'
@@ -32,4 +33,6 @@ deploy:
     application: lametro-councilmatic
     deployment_group: staging
     on:
-      branch: master
+      branch:
+         - master
+	 - troubleshoot
