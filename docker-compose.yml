@@ -1,18 +1,60 @@
 version: '3.3'
 services:
-  solr-production:
-    image: solr:7.5
-    container_name: lametro-production-solr
-    volumes:
-      - ./solr_configs:/la-metro-councilmatic_configs
-      - data:/opt/solr/server/solr/mycores
-    command: sh -c 'solr-create -c lametro -d /la-metro-councilmatic_configs'
+  app:
+    image: lametro
+    container_name: lametro
+    restart: always
+    build: .
     ports:
-      - '127.0.0.1:8985:8983'
-    environment:
-      SOLR_LOG_LEVEL: ERROR
-    restart: on-failure
-  solr-staging:
+      # Map ports on your computer to ports on your container. This allows you,
+      # e.g., to visit your containerized application in a browser on your
+      # computer.
+      - 8000:8000
+    depends_on:
+      # Declare any services that should be started first. Beware: It checks
+      # that a service has started, but not that a service is ready.
+      - postgres
+      - solr-staging
+    volumes:
+      # Mount the development directory as a volume into the container, so
+      # Docker automatically recognizes your changes.
+      - .:/app
+      # Mount example configs as live configs in the container.
+      - ${PWD}/councilmatic/settings_deployment.py.example:/app/councilmatic/settings_deployment.py
+    command: python manage.py runserver 0.0.0.0:8000
+
+  migration:
+    container_name: lametro-migration
+    image: lametro:latest
+    depends_on:
+      # Declaring this dependency ensures that your application image is built
+      # before migrations are run, and that your application and migrations can
+      # be run from the same image, rather than creating purpose-specific
+      # copies.
+      - app
+      - postgres
+    volumes:
+      # These should generally be the same as your application volumes.
+      - .:/app
+      - ${PWD}/councilmatic/settings_deployment.py.example:/app/councilmatic/settings_deployment.py
+    command: python manage.py migrate
+
+  postgres:
+    container_name: lametro-postgres
+    restart: always
+    image: postgres:9.6
+    volumes:
+      # By default, Postgres instantiates an anonymous volume. Use a named
+      # one, so your data persists beyond the life of the container. See this
+      # post for a discussion of the pitfalls of Postgres and anonymous
+      # volumes: https://linuxhint.com/run_postgresql_docker_compose/
+      - lametro-db-data:/var/lib/postgresql/data
+      # Mount our initialization script.
+      - ${PWD}/scripts/init-db.sh:/docker-entrypoint-initdb.d/10-init.sh
+    ports:
+      - 32001:5432
+
+  solr:
     image: solr:7.5
     container_name: lametro-staging-solr
     volumes:
@@ -20,9 +62,11 @@ services:
       - data:/opt/solr/server/solr/mycores
     command: sh -c 'solr-create -c lametro-staging -d /la-metro-councilmatic_configs'
     ports:
-      - '127.0.0.1:8986:8983'
+      - 8986:8983
     environment:
       SOLR_LOG_LEVEL: ERROR
     restart: on-failure
+
 volumes:
   data:
+  lametro-db-data:

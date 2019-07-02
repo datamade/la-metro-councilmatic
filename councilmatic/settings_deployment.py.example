@@ -16,7 +16,8 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
         'NAME': 'lametro',
-        'USER': '',
+        'USER': 'postgres',
+        'HOST': 'postgres',
         'PASSWORD': '',
         'PORT': 5432,
     }
@@ -25,9 +26,7 @@ DATABASES = {
 HAYSTACK_CONNECTIONS = {
     'default': {
         'ENGINE': 'haystack.backends.solr_backend.SolrEngine',
-        #'URL': 'http://127.0.0.1:8983/solr'
-        # ...or for multicore...
-        'URL': 'http://127.0.0.1:8983/solr/lametro',
+        'URL': 'http://solr/solr/lametro',
     },
 }
 
