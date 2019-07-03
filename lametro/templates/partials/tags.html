@@ -1,4 +1,5 @@
 {% load extras %}
+{% load lametro_extras %}
 <p class="small text-muted condensed">
   <i class="fa fa-fw fa-calendar-o"></i> {{result.object.get_last_action_date|date:'n/d/Y'}} - {{result.object.current_action.description | remove_action_subj }} (most recent action)
 </p>
@@ -17,7 +18,7 @@
         <i class="fa fa-fw fa-tag"></i>
         {% for tag in result.object.topics %}
             {% with "topics_exact:"|add:tag as tag_facet %}
-            <span class="badge badge-muted pseudo-topic-tag">
+            <span class="badge {% if tag|matches_query:request %}badge-highlight{% else %}badge-muted{% endif %} pseudo-topic-tag">
                 <a href="{% search_with_querystring request selected_facets=tag_facet %}">{{tag}}</a>
             </span>&nbsp;
             {% endwith %}

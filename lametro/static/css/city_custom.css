@@ -325,3 +325,8 @@ div#toggleControls { margin-bottom: 1em; }
         float:none;
     }
 }
+
+.badge-highlight {
+    background-color: #d9edf7;
+    font-weight: normal;
+}

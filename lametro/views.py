@@ -13,7 +13,7 @@ from collections import namedtuple
 import json as simplejson
 import os
 
-from haystack.inputs import Raw
+from haystack.inputs import Raw, Exact
 from haystack.query import SearchQuerySet
 from requests.exceptions import HTTPError
 
@@ -708,6 +708,8 @@ class LAMetroCouncilmaticSearchForm(CouncilmaticSearchForm):
         if kwargs.get('search_corpus'):
             self.search_corpus = kwargs.pop('search_corpus')
 
+        self.result_type = kwargs.pop('result_type', None)
+
         super(LAMetroCouncilmaticSearchForm, self).__init__(*args, **kwargs)
 
     def search(self):
@@ -716,6 +718,11 @@ class LAMetroCouncilmaticSearchForm(CouncilmaticSearchForm):
         if self.search_corpus == 'all':
             # Don't auto-escape my query! https://django-haystack.readthedocs.io/en/v2.4.1/searchqueryset_api.html#SearchQuerySet.filter
             sqs = sqs.filter_or(attachment_text=Raw(self.cleaned_data['q']))
+
+        if self.result_type == 'keyword':
+            sqs = sqs.exclude(topics__iexact=Exact(self.cleaned_data['q']))
+        elif self.result_type == 'topic':
+            sqs = sqs.filter(topics__iexact=Exact(self.cleaned_data['q']))
 
         return sqs
 
@@ -730,6 +737,7 @@ class LAMetroCouncilmaticFacetedSearchView(CouncilmaticFacetedSearchView):
 
         form_kwargs['selected_facets'] = self.request.GET.getlist("selected_facets")
         form_kwargs['search_corpus'] = 'all' if self.request.GET.get('search-all') else 'bills'
+        form_kwargs['result_type'] = self.request.GET.get('result_type', 'all')
 
         sqs = SearchQuerySet().facet('bill_type', sort='index')\
                               .facet('sponsorships', sort='index')\

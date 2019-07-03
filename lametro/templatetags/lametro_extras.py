@@ -177,3 +177,9 @@ def get_highlighted_attachment_text(context, ocd_id):
     highlight = ExactHighlighter(context['query'])
     
     return highlight.highlight(attachment_text)
+
+@register.filter
+def matches_query(tag, request):
+    if request.GET.get('q'):
+        return tag.lower() == request.GET.get('q').lower()
+    return False

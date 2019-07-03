@@ -106,15 +106,14 @@
     <script type="text/javascript">
         $('label.btn.btn-search-option').click(function toggleRadio(e) {
             // Toggle "active" appearance first, so filtering on active works.
-            // .button docs: https://getbootstrap.com/docs/3.3/javascript/#buttons
-            $(this).button('toggle');
+            $('label.btn.btn-search-option.active').removeClass('active');
+            $(this).addClass('active');
 
             var selected_input = $(this).children('input')[0];
             $(selected_input).attr('checked', true);
 
-            var unselected_input = $('label.btn').not('.active')
-                                                 .children('input')[0];
-            $(unselected_input).removeAttr('checked');
+            var unselected_input = $('label.btn').not('.active').children('input')[0];
+            $(unselected_input).attr('checked', false);
         });
     </script>
 

@@ -60,7 +60,7 @@ function autocompleteSearchBar(element) {
         $.get('/topic/', { 'guid': suggestion.data })
       ).then(function(response) {
         if (response.status_code == 200) {
-          var base = '/search/?selected_facets=topics_exact%3A';
+          var base = '/search/?q=';
           var url = base + response.subject_safe;
           window.location.href = url;
         };
