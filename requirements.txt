@@ -1,6 +1,7 @@
 Django>=2.2,<2.3
 https://github.com/opencivicdata/python-opencivicdata/archive/7203a5ecf5adcbbebbe79a8e192a693266d2203b.zip
-django-councilmatic[convert_docs]@https://github.com/datamade/django-councilmatic/archive/la_metro_accomodations.zip
+# django-councilmatic[convert_docs]@https://github.com/datamade/django-councilmatic/archive/la_metro_accomodations.zip
+-e django-councilmatic
 django-debug-toolbar==1.9.1
 raven==5.30.0
 gunicorn==19.6.0
