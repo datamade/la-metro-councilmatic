@@ -85,6 +85,7 @@ $.widget( "custom.highlightedAutocomplete", $.ui.autocomplete, {
 
 /* Attaches autocomplete to the element specified by the id passed */
 function autocompleteSearchBar(element) {
+  $.fn.val = $.fn.html;
   $(element).highlightedAutocomplete({
     source: Autocomplete.getSuggestions
   });
