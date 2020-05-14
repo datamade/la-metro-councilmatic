@@ -21,70 +21,71 @@ var SmartLogic = {
   }
 };
 
-/* Attaches autocomplete to the input div specified by the id passed */
-function autocompleteSearchBar(element) {
-  $(element).autocomplete({
-    serviceUrl: SmartLogic.buildServiceUrl,
-    ajaxSettings: {
-      beforeSend: function (xhr) {
-        SmartLogic.getToken();
-        xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
-        xhr.setRequestHeader('Authorization', 'Bearer ' + window.localStorage.getItem('ses_token'));
-      },
-      data: {}
-    },
-    paramName: '',
-    transformResult: function(response, term) {
-      var res = JSON.parse(response);
-      var noneFoundText = "No suggestions found. Press enter to perform a keyword search."
-      if (res.status_code == 500 || res.terms.length < 1) {
-        return {suggestions: [noneFoundText]};
-      } else {
-        return {
-          suggestions: $.map(res.terms, function(d) {
-            /* d.term.equivalence is an array of objects. Each object contains
-            a "fields" array, also an array of objects, containing alternative
-            names for the concept. Identify whether our search term matches one
-            of these labels, so we can include it in the suggestion. */
-            var nptLabel = '';
-
-            if ( d.term.equivalence !== undefined && d.term.equivalence.length > 0 ) {
-              var npt;
-
-              $.each(d.term.equivalence, function(idx, el) {
-                npt = el.fields.reduce(function(inp, el) {
-                  if (inp) {
-                    return inp
-                  } else {
-                    if (el.field.name.toLowerCase() == term.toLowerCase()) {
-                      return el.field.name;
-                    }
-                  }
-                }, undefined);
-
-                if ( npt ) {
-                  nptLabel = ' (' + npt + ')';
-                  return false; // Equivalent to "break"
-                }
-              });
-            };
-
-            return {'value': d.term.name + nptLabel, 'data': d.term.id};
-          })
-        };
+var Autocomplete = {
+  getSuggestions: function(request, callback) {
+    SmartLogic.getToken()
+    $.ajax({
+      url: SmartLogic.buildServiceUrl(request.term),
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'Authorization': 'Bearer ' + window.localStorage.getItem('ses_token')
       }
-    },
-    onSelect: function(suggestion) {
-      $.when(
-        $.get('/topic/', { 'guid': suggestion.data })
-      ).then(function(response) {
-        if (response.status_code == 200) {
-          var base = '/search/?q=';
-          var url = base + response.subject_safe;
-          window.location.href = url;
-        };
+    }).then(function(response) {
+      var results = Autocomplete.parseSuggestions(response, request.term);
+      return callback(results);
+    });
+  },
+  parseSuggestions: function(response, term) {
+    var noneFoundText = "No suggestions found. Press enter to perform a keyword search."
+    if (response.status_code == 500 || response.terms.length < 1) {
+      return [noneFoundText];
+    } else {
+      return $.map(response.terms, function(d) {
+          /* d.term.equivalence is an array of objects. Each object contains
+          a "fields" array, also an array of objects, containing alternative
+          names for the concept. Identify whether our search term matches one
+          of these labels, so we can include it in the suggestion. */
+          var nptLabel = '';
+          if ( d.term.equivalence !== undefined && d.term.equivalence.length > 0 ) {
+            var npt;
+            $.each(d.term.equivalence, function(idx, el) {
+              npt = el.fields.reduce(function(inp, el) {
+                if (inp) {
+                  return inp
+                } else {
+                  if (el.field.name.toLowerCase() == term.toLowerCase()) {
+                    return el.field.name;
+                  }
+                }
+              }, undefined);
+              if ( npt ) {
+                nptLabel = ' (' + npt + ')';
+                return false; // Equivalent to "break"
+              }
+            });
+          };
+          return {'label': d.term.name + nptLabel, 'value': d.term.id};
       });
-    },
-    triggerSelectOnValidInput: false,
+    }
+  }
+}
+
+$.widget( "custom.highlightedAutocomplete", $.ui.autocomplete, {
+  _renderItem: function(ul, item) {
+    var match = new RegExp(this.term, "i"); // i makes the regex case insensitive
+    var highlightedResult = item.label.replace(match, '<strong>' + this.term + '</strong>');
+
+    return $('<li>')
+      .attr('data-value', item.value)
+      .addClass('autocomplete-suggestion')
+      .append('<div>' + highlightedResult + '</div>')
+      .appendTo(ul);
+  }
+});
+
+/* Attaches autocomplete to the element specified by the id passed */
+function autocompleteSearchBar(element) {
+  $(element).highlightedAutocomplete({
+    source: Autocomplete.getSuggestions
   });
 };
