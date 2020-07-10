@@ -1,15 +1,11 @@
 branches:
   only:
-  - "/^v0.*$/"
-  - master
+    - "/^v0.*$/"
+    - master
+    - hcg/dockerhub-spike
+
 language: python
-python:
-- '3.5'
-cache: pip
-install:
-- pip install --upgrade pip
-- pip install --upgrade -r requirements.txt
-sudo: required
+python: '3.5'
 
 addons:
   postgresql: '10'
@@ -17,26 +13,44 @@ addons:
     packages:
     - postgresql-10-postgis-2.4
 
-before_script:
-  - psql -U postgres -c "create extension postgis"
-  - mv configs/test_settings_deployment.py councilmatic/settings_deployment.py
-script: python manage.py migrate && pytest
-deploy:
-  - provider: codedeploy
-    access_key_id: AKIAJNYGDLOJKHOUWCAA
-    secret_access_key:
-      secure: HkMlaMSE/qhzk5QvTccId2/eoEx8iPrS5GFRr95YXA5/r0l1kUnBCcv+yTPOjDSg969P/V3vs0bRMKVDU0ibFpc2FgQQdAKrbc8l7ZBlnMEMSId/LyyTxszVcfOUPqqSqK0bFjjqud/k9rmL3Du3sUrQSkkkRWwrSRdbu6+vKKYTduhQ++bzgjTyVab49eCoRCh0JeswxONBx7wWsXxZxSDBEVaRipg2tsZMzfxbVbCQK5yL5xeoeQj0JMV6mTK+hwwRzFZKi5tNiLQQ/26xTUVdKU2FZOp+0cXMFNweYHo0Ca3WGbEVZ54ur9OGm3nwJhLII7vv5Z66qjkiyVTpdqIkZRWYzA8xO1w2tK6TdfpJTvs/8jyG1QKK6FOBf9qfcLt6Z5Kc+h6XMTfd8QS/g/uIemoO1oFPGi+2keHUX8H8qUlLcpc5JPKDbYsXGlsGIdDxJbcCI9J/O34tG5hOZz4hH9SYQtkFdV+oGxvBf4KEUMoWd/d9sggtr3ezX4ltrOpCk7VjH5wqYkzzWdO8Oo3aecaOsPJsBa0//WRdAcxxI8SlaPUBgauFx5wfDHQVwgx3BqP4eQGYMkM9+0MBlnYi1Ub8AZTEpjUqkM7VH8v56DA3jD/yo7VwhfFLhjir9CYp7tK4HOR7ZoHOpqyi97HVQXzOh+Cy8wmH9hA9A18=
-    revision_type: github
-    application: la-metro-councilmatic
-    deployment_group: production
-    on:
-      tags: true
-  - provider: codedeploy
-    access_key_id: AKIAJNYGDLOJKHOUWCAA
-    secret_access_key:
-      secure: HkMlaMSE/qhzk5QvTccId2/eoEx8iPrS5GFRr95YXA5/r0l1kUnBCcv+yTPOjDSg969P/V3vs0bRMKVDU0ibFpc2FgQQdAKrbc8l7ZBlnMEMSId/LyyTxszVcfOUPqqSqK0bFjjqud/k9rmL3Du3sUrQSkkkRWwrSRdbu6+vKKYTduhQ++bzgjTyVab49eCoRCh0JeswxONBx7wWsXxZxSDBEVaRipg2tsZMzfxbVbCQK5yL5xeoeQj0JMV6mTK+hwwRzFZKi5tNiLQQ/26xTUVdKU2FZOp+0cXMFNweYHo0Ca3WGbEVZ54ur9OGm3nwJhLII7vv5Z66qjkiyVTpdqIkZRWYzA8xO1w2tK6TdfpJTvs/8jyG1QKK6FOBf9qfcLt6Z5Kc+h6XMTfd8QS/g/uIemoO1oFPGi+2keHUX8H8qUlLcpc5JPKDbYsXGlsGIdDxJbcCI9J/O34tG5hOZz4hH9SYQtkFdV+oGxvBf4KEUMoWd/d9sggtr3ezX4ltrOpCk7VjH5wqYkzzWdO8Oo3aecaOsPJsBa0//WRdAcxxI8SlaPUBgauFx5wfDHQVwgx3BqP4eQGYMkM9+0MBlnYi1Ub8AZTEpjUqkM7VH8v56DA3jD/yo7VwhfFLhjir9CYp7tK4HOR7ZoHOpqyi97HVQXzOh+Cy8wmH9hA9A18=
-    revision_type: github
-    application: la-metro-councilmatic
-    deployment_group: staging
-    on:
-      branch: master
+sudo: required
+cache: pip
+
+install:
+  - pip install --upgrade pip
+  - pip install --upgrade -r requirements.txt
+
+stages:
+  - setup
+  - test
+  - deploy
+
+jobs:
+  include:
+    - stage: setup
+      script: psql -U postgres -c "create extension postgis" && mv configs/test_settings_deployment.py councilmatic/settings_deployment.py
+
+    - stage: test
+      script: python manage.py migrate && pytest
+
+    - stage: deploy
+      script: skip
+      deploy:
+        - provider: codedeploy
+          access_key_id: AKIAJNYGDLOJKHOUWCAA
+          secret_access_key:
+            secure: HkMlaMSE/qhzk5QvTccId2/eoEx8iPrS5GFRr95YXA5/r0l1kUnBCcv+yTPOjDSg969P/V3vs0bRMKVDU0ibFpc2FgQQdAKrbc8l7ZBlnMEMSId/LyyTxszVcfOUPqqSqK0bFjjqud/k9rmL3Du3sUrQSkkkRWwrSRdbu6+vKKYTduhQ++bzgjTyVab49eCoRCh0JeswxONBx7wWsXxZxSDBEVaRipg2tsZMzfxbVbCQK5yL5xeoeQj0JMV6mTK+hwwRzFZKi5tNiLQQ/26xTUVdKU2FZOp+0cXMFNweYHo0Ca3WGbEVZ54ur9OGm3nwJhLII7vv5Z66qjkiyVTpdqIkZRWYzA8xO1w2tK6TdfpJTvs/8jyG1QKK6FOBf9qfcLt6Z5Kc+h6XMTfd8QS/g/uIemoO1oFPGi+2keHUX8H8qUlLcpc5JPKDbYsXGlsGIdDxJbcCI9J/O34tG5hOZz4hH9SYQtkFdV+oGxvBf4KEUMoWd/d9sggtr3ezX4ltrOpCk7VjH5wqYkzzWdO8Oo3aecaOsPJsBa0//WRdAcxxI8SlaPUBgauFx5wfDHQVwgx3BqP4eQGYMkM9+0MBlnYi1Ub8AZTEpjUqkM7VH8v56DA3jD/yo7VwhfFLhjir9CYp7tK4HOR7ZoHOpqyi97HVQXzOh+Cy8wmH9hA9A18=
+          revision_type: github
+          application: la-metro-councilmatic
+          deployment_group: production
+          on:
+            tags: true
+        - provider: codedeploy
+          access_key_id: AKIAJNYGDLOJKHOUWCAA
+          secret_access_key:
+            secure: HkMlaMSE/qhzk5QvTccId2/eoEx8iPrS5GFRr95YXA5/r0l1kUnBCcv+yTPOjDSg969P/V3vs0bRMKVDU0ibFpc2FgQQdAKrbc8l7ZBlnMEMSId/LyyTxszVcfOUPqqSqK0bFjjqud/k9rmL3Du3sUrQSkkkRWwrSRdbu6+vKKYTduhQ++bzgjTyVab49eCoRCh0JeswxONBx7wWsXxZxSDBEVaRipg2tsZMzfxbVbCQK5yL5xeoeQj0JMV6mTK+hwwRzFZKi5tNiLQQ/26xTUVdKU2FZOp+0cXMFNweYHo0Ca3WGbEVZ54ur9OGm3nwJhLII7vv5Z66qjkiyVTpdqIkZRWYzA8xO1w2tK6TdfpJTvs/8jyG1QKK6FOBf9qfcLt6Z5Kc+h6XMTfd8QS/g/uIemoO1oFPGi+2keHUX8H8qUlLcpc5JPKDbYsXGlsGIdDxJbcCI9J/O34tG5hOZz4hH9SYQtkFdV+oGxvBf4KEUMoWd/d9sggtr3ezX4ltrOpCk7VjH5wqYkzzWdO8Oo3aecaOsPJsBa0//WRdAcxxI8SlaPUBgauFx5wfDHQVwgx3BqP4eQGYMkM9+0MBlnYi1Ub8AZTEpjUqkM7VH8v56DA3jD/yo7VwhfFLhjir9CYp7tK4HOR7ZoHOpqyi97HVQXzOh+Cy8wmH9hA9A18=
+          revision_type: github
+          application: la-metro-councilmatic
+          deployment_group: staging
+          on:
+            branch: master
