@@ -93,24 +93,24 @@
                             <tr>
                                 <th>Date</th>
                                 <th>Action</th>
-                                <th>Committee</th>
+                                <th>Meeting</th>
                             </tr>
                         </thead>
                         <tbody>
                             {% for action in actions %}
                                 <tr>
                                     <td class='nowrap text-muted small'>
-                                        <span datetime='{{action.date_dt | format_date_sort }}'>{{action.date_dt|date:'n/d/y'}}</span>
+                                        <span datetime='{{action.date}}'>{{action.date|date:'n/d/y'}}</span>
                                     </td>
                                     <td class="small">
-                                        <span class='text-{{action.label}}'>{{action.description | remove_action_subj}}</span>
-                                        {% if action.related_organization %}
-                                            to
-                                            {{action.related_organization.link_html|safe}}
+                                        <span class='text-default'>{{action.description}}</span>
+                                    </td>
+                                    <td class="small">
+                                        {% if action.event.status == 'cancelled' %}<strike>{% endif %}
+                                        {{ action.event.link_html|safe }}
+                                        {% if action.event.status == 'cancelled' %}</strike>
+                                            <small>&nbsp;<span class="label label-stale">{{ action.event.status }}</span></small>
                                         {% endif %}
-                                    </td>
-                                    <td class="small">
-                                        {{action.organization.link_html|safe}}
                                     </td>
                                 </tr>
                             {% endfor %}
