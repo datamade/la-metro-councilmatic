@@ -118,7 +118,7 @@ class LAMetroBill(Bill, SourcesMixin):
             results = format_full_text(full_text)
 
         if results:
-            title = parse_subject(results)
+            title = parse_subject(results) or ''
         else:
             title = self.bill_type
 
