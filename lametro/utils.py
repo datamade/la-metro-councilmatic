@@ -8,6 +8,8 @@ from lxml.etree import tostring
 from django.conf import settings
 from django.utils import timezone
 
+from councilmatic_core.models import Organization, Event
+
 app_timezone = pytz.timezone(settings.TIME_ZONE)
 
 def format_full_text(full_text):
@@ -37,8 +39,3 @@ def format_full_text(full_text):
 def parse_subject(text):
     if ('[PROJECT OR SERVICE NAME]' not in text) and ('[DESCRIPTION]' not in text) and ('[CONTRACT NUMBER]' not in text):
         return text.strip()
-
-def get_identifier(obj_or_string):
-    if isinstance(obj_or_string, str):
-        return obj_or_string
-    return obj_or_string.id

@@ -118,6 +118,5 @@ PIC_BASE_URL = 'https://pic.datamade.us/lametro/document/'
 # PIC_BASE_URL = 'http://127.0.0.1:5000/lametro/document/'
 
 HAYSTACK_SIGNAL_PROCESSOR = 'haystack.signals.RealtimeSignalProcessor'
-HAYSTACK_IDENTIFIER_METHOD = 'lametro.utils.get_identifier'
 
 ADV_CACHE_INCLUDE_PK = True
